@@ -8,8 +8,8 @@ int esta_en(int caracter, int *lista, int largo_lista){
         if(caracter==lista[i]){
             return 1;
         }
-        return 0;
     }
+    return 0;
 }
 
 int main(int argc, char **argv) {
@@ -23,8 +23,10 @@ int main(int argc, char **argv) {
     int operadores[6] = {'+', '-', '*', '/', '(', ')'};
     int x, input_tabla;
     int estado_actual = 0;
+    int fila = 1, columna=1;
 
     while ((x = fgetc(input_fp)) != EOF) {
+        columna+=1;
         if (!esta_en(x, caract_ignorados, 2)) {
             printf("estado ant:%d, caracter ingresado:%c ", estado_actual, x);
             if(isdigit(x)){
@@ -45,6 +47,8 @@ int main(int argc, char **argv) {
             }
             else if(x=='\n'){
                 input_tabla = 1;
+                fila += 1;
+                columna = 1;
                 if(estado_actual==1){
                     fputc('\n', output_fptr);
                 }
@@ -52,12 +56,16 @@ int main(int argc, char **argv) {
             else{
                 input_tabla = 2;
             }
-            estado_actual = T(estado_actual, x);
+            estado_actual = T(estado_actual, input_tabla);
             printf("estado actual:%d\n", estado_actual);
         }
         if (estado_actual == 2) {
-            printf("RECHAZADA\n");
-            estado_actual = 0;
+            fprintf(
+                stderr, "caracter desconocido en: fila=%d columna=%d\n", fila, columna-1
+            );
+            fclose(input_fp);
+            fclose(output_fptr);
+            return 0;
         }
     }
     fclose(input_fp);
