@@ -1,5 +1,12 @@
 #include <stdio.h>
 #include <ctype.h>
+#define NUEVO_TOKEN 0
+#define ESCRIBIENDO_NUMERO 1
+#define RECHAZADO 2
+
+#define INPUT_DIGITO 0
+#define INPUT_OPERADOR 1
+#define INPUT_CARACTER_DESCONOCIDO 2
 
 int T(int q, int x);
 
@@ -21,47 +28,47 @@ int main(int argc, char **argv) {
 
     int caract_ignorados[2] = {'\t', ' '};
     int operadores[6] = {'+', '-', '*', '/', '(', ')'};
-    int x, input_tabla;
-    int estado_actual = 0;
+    int caracter, input_tabla;
+    int estado_actual = NUEVO_TOKEN;
     int fila = 1, columna=1;
 
-    while ((x = fgetc(input_fp)) != EOF) {
+    while ((caracter = fgetc(input_fp)) != EOF) {
         columna+=1;
-        if (!esta_en(x, caract_ignorados, 2)) {
-            printf("estado ant:%d, caracter ingresado:%c ", estado_actual, x);
-            if(isdigit(x)){
-                input_tabla = 0;
-                if(estado_actual==0){
+        if (!esta_en(caracter, caract_ignorados, 2)) {
+            printf("estado ant:%d, caracter ingresado:%c ", estado_actual, caracter);
+            if(isdigit(caracter)){
+                input_tabla = INPUT_DIGITO;
+                if(estado_actual==NUEVO_TOKEN){
                     fputs("Constante numerica,", output_fptr);
                 }
-                fputc(x, output_fptr);
+                fputc(caracter, output_fptr);
             }
-            else if(esta_en(x,operadores,6)){
-                input_tabla = 1;
-                if(estado_actual==1){
+            else if(esta_en(caracter,operadores,6)){
+                input_tabla = INPUT_OPERADOR;
+                if(estado_actual==ESCRIBIENDO_NUMERO){
                     fputc('\n', output_fptr);
                 }
                 fputs("Operador,", output_fptr);
-                fputc(x, output_fptr);
+                fputc(caracter, output_fptr);
                 fputc('\n', output_fptr);
             }
-            else if(x=='\n'){
+            else if(caracter=='\n'){
                 input_tabla = 1;
                 fila += 1;
                 columna = 1;
-                if(estado_actual==1){
+                if(estado_actual==ESCRIBIENDO_NUMERO){
                     fputc('\n', output_fptr);
                 }
             }
             else{
-                input_tabla = 2;
+                input_tabla = INPUT_CARACTER_DESCONOCIDO;
             }
             estado_actual = T(estado_actual, input_tabla);
             printf("estado actual:%d\n", estado_actual);
         }
-        if (estado_actual == 2) {
+        if (estado_actual == RECHAZADO) {
             fprintf(
-                stderr, "caracter desconocido en: fila=%d columna=%d\n", fila, columna-1
+                stderr, "[ERROR]: Caracter desconocido en: fila=%d columna=%d\n", fila, columna-1
             );
             fclose(input_fp);
             fclose(output_fptr);
